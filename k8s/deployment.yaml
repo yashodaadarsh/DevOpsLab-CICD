@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
       - name: my-k8s-app
-        image: laxmi916/my-k8s-app:latest  # your Docker Hub image
+        image: yashodaadarsh/my-k8s-cicd-app:latest  # your Docker Hub image
         imagePullPolicy: Always
         ports:
         - containerPort: 8080
