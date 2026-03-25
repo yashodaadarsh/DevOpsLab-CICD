@@ -27,6 +27,12 @@ pipeline {
             }
         }
 
+        stage('Verify Docker Images') {
+            steps {
+                sh 'docker images'
+            }
+        }
+
         stage('Push Docker Image') {
             steps {
                 withCredentials([usernamePassword(
@@ -36,18 +42,30 @@ pipeline {
                 )]) {
                     sh '''
                     echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
+
+                    docker push yashodaadarsh/my-k8s-cicd-app:${BUILD_NUMBER}
                     docker push yashodaadarsh/my-k8s-cicd-app:latest
+
                     docker logout
                     '''
                 }
             }
         }
 
+        stage('Cleanup Old Docker Images') {
+            steps {
+                sh 'docker image prune -f'
+            }
+        }
+
+        // OPTIONAL: Kubernetes stages (enable when needed)
+
+        /*
         stage('Start Minikube if not running') {
             steps {
                 sh '''
                 if ! minikube status | grep -q "apiserver: Running"; then
-                    echo "Minikube is not running. Starting now..."
+                    echo "Starting Minikube..."
                     minikube start --driver=docker --memory=2048 --cpus=2
                 fi
                 '''
@@ -57,15 +75,19 @@ pipeline {
         stage('Deploy to Kubernetes') {
             steps {
                 sh '''
-                # Load latest image into Minikube
-                # minikube image load yashodaadarsh/my-k8s-cicd-app:latest
+                # Load image into Minikube
+                minikube image load yashodaadarsh/my-k8s-cicd-app:${BUILD_NUMBER}
+
+                # Update deployment with new image
+                sed -i "s|image:.*|image: yashodaadarsh/my-k8s-cicd-app:${BUILD_NUMBER}|g" k8s/deployment.yaml
 
                 # Apply manifests
                 minikube kubectl -- apply -f k8s/deployment.yaml
                 minikube kubectl -- apply -f k8s/service.yaml
-                minikube service my-k8s-cicd-app-service
                 '''
             }
         }
+        */
+
     }
 }
