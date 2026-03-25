@@ -77,8 +77,8 @@ pipeline {
                 sed -i "s|image:.*|image: yashodaadarsh/my-k8s-cicd-app:${BUILD_NUMBER}|g" k8s/deployment.yaml
 
                 # Apply manifests
-                minikube kubectl -- apply -f k8s/deployment.yaml
-                minikube kubectl -- apply -f k8s/service.yaml
+                kubectl apply -f k8s/deployment.yaml
+                kubectl apply -f k8s/service.yaml
                 '''
             }
         }
