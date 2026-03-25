@@ -33,41 +33,37 @@ pipeline {
             }
         }
 
-        stage('Push Docker Image') {
-            steps {
-                withCredentials([usernamePassword(
-                    credentialsId: 'dockerhub-creds',
-                    usernameVariable: 'DOCKER_USER',
-                    passwordVariable: 'DOCKER_PASS'
-                )]) {
-                    sh '''
-                    echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
+        // stage('Push Docker Image') {
+        //     steps {
+        //         withCredentials([usernamePassword(
+        //             credentialsId: 'dockerhub-creds',
+        //             usernameVariable: 'DOCKER_USER',
+        //             passwordVariable: 'DOCKER_PASS'
+        //         )]) {
+        //             sh '''
+        //             echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
 
-                    docker push yashodaadarsh/my-k8s-cicd-app:${BUILD_NUMBER}
+        //             docker push yashodaadarsh/my-k8s-cicd-app:${BUILD_NUMBER}
 
-                    docker logout
-                    '''
-                }
-            }
-        }
+        //             docker logout
+        //             '''
+        //         }
+        //     }
+        // }
 
-        stage('Cleanup Old Docker Images') {
-            steps {
-                sh 'docker image prune -f'
-            }
-        }
 
         // OPTIONAL: Kubernetes stages (enable when needed)
 
-        /*
+        
         stage('Start Minikube if not running') {
             steps {
                 sh '''
                 if ! minikube status | grep -q "apiserver: Running"; then
                     echo "Starting Minikube..."
-                    minikube start --driver=docker --memory=2048 --cpus=2
+                    minikube start 
                 fi
                 '''
+                //  minikube start --driver=docker --memory=2048 --cpus=2
             }
         }
 
@@ -86,7 +82,7 @@ pipeline {
                 '''
             }
         }
-        */
+        
 
     }
 }
