@@ -60,7 +60,7 @@ pipeline {
                 sh '''
                 if ! minikube status | grep -q "apiserver: Running"; then
                     echo "Starting Minikube..."
-                    minikube start 
+                    minikube start --driver=docker
                 fi
                 '''
                 //  minikube start --driver=docker --memory=2048 --cpus=2
