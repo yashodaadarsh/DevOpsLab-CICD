@@ -44,7 +44,6 @@ pipeline {
                     echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
 
                     docker push yashodaadarsh/my-k8s-cicd-app:${BUILD_NUMBER}
-                    docker push yashodaadarsh/my-k8s-cicd-app:latest
 
                     docker logout
                     '''
