@@ -20,6 +20,8 @@ pipeline {
             steps {
                 sh '''
                 docker build -t my-k8s-cicd-app:${BUILD_NUMBER} .
+
+                docker tag my-k8s-cicd-app:${BUILD_NUMBER} yashodaadarsh/my-k8s-cicd-app:${BUILD_NUMBER}
                 docker tag my-k8s-cicd-app:${BUILD_NUMBER} yashodaadarsh/my-k8s-cicd-app:latest
                 '''
             }
