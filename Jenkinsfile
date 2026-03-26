@@ -79,7 +79,7 @@ pipeline {
         stage('Verify deployment'){
             steps{
                 sh '''
-                    minikube service my-k8s-app-service
+                    minikube service my-k8s-app-service --url
                 '''
             }
         }
