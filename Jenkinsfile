@@ -5,6 +5,7 @@ pipeline {
 
         stage('Checkout from GitHub') {
             steps {
+                deleteDir()   // 🔥 ensures no stale code
                 git branch: 'main',
                     url: 'https://github.com/yashodaadarsh/DevOpsLab-CICD'
             }
@@ -44,10 +45,6 @@ pipeline {
             }
         }
 
-
-        // OPTIONAL: Kubernetes stages (enable when needed)
-
-        
         stage('Start Minikube if not running') {
             steps {
                 sh '''
@@ -56,7 +53,6 @@ pipeline {
                     minikube start --driver=docker
                 fi
                 '''
-                //  minikube start --driver=docker --memory=2048 --cpus=2
             }
         }
 
@@ -66,24 +62,31 @@ pipeline {
                 # Load image into Minikube
                 minikube image load yashodaadarsh/my-k8s-node-app:${BUILD_NUMBER}
 
-                # Update deployment with new image
+                # Update deployment image
                 sed -i "s|image:.*|image: yashodaadarsh/my-k8s-node-app:${BUILD_NUMBER}|g" k8s/deployment.yaml
 
                 # Apply manifests
                 kubectl apply -f k8s/deployment.yaml
                 kubectl apply -f k8s/service.yaml
+
+                # Wait for pods to be ready 🔥
+                kubectl rollout status deployment/my-k8s-app-deployment
                 '''
             }
         }
 
-        stage('Verify deployment'){
-            steps{
+        stage('Verify Deployment') {
+            steps {
                 sh '''
-                    minikube service my-k8s-app-service --url
+                echo "Fetching service URL..."
+                URL=$(minikube service my-k8s-app-service --url)
+
+                echo "Service URL: $URL"
+
+                echo "Checking application health..."
+                curl -f $URL || exit 1
                 '''
             }
         }
-        
-
     }
 }
