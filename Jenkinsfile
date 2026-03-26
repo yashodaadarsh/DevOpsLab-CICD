@@ -19,37 +19,30 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 sh '''
-                docker build -t my-k8s-cicd-app:${BUILD_NUMBER} .
+                docker build -t my-k8s-node-app:${BUILD_NUMBER} .
 
-                docker tag my-k8s-cicd-app:${BUILD_NUMBER} yashodaadarsh/my-k8s-cicd-app:${BUILD_NUMBER}
-                docker tag my-k8s-cicd-app:${BUILD_NUMBER} yashodaadarsh/my-k8s-cicd-app:latest
+                docker tag my-k8s-node-app:${BUILD_NUMBER} yashodaadarsh/my-k8s-node-app:${BUILD_NUMBER}
                 '''
             }
         }
 
-        stage('Verify Docker Images') {
+        stage('Push Docker Image') {
             steps {
-                sh 'docker images'
+                withCredentials([usernamePassword(
+                    credentialsId: 'dockerhub-creds',
+                    usernameVariable: 'DOCKER_USER',
+                    passwordVariable: 'DOCKER_PASS'
+                )]) {
+                    sh '''
+                    echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
+
+                    docker push yashodaadarsh/my-k8s-node-app:${BUILD_NUMBER}
+
+                    docker logout
+                    '''
+                }
             }
         }
-
-        // stage('Push Docker Image') {
-        //     steps {
-        //         withCredentials([usernamePassword(
-        //             credentialsId: 'dockerhub-creds',
-        //             usernameVariable: 'DOCKER_USER',
-        //             passwordVariable: 'DOCKER_PASS'
-        //         )]) {
-        //             sh '''
-        //             echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
-
-        //             docker push yashodaadarsh/my-k8s-cicd-app:${BUILD_NUMBER}
-
-        //             docker logout
-        //             '''
-        //         }
-        //     }
-        // }
 
 
         // OPTIONAL: Kubernetes stages (enable when needed)
@@ -71,14 +64,22 @@ pipeline {
             steps {
                 sh '''
                 # Load image into Minikube
-                minikube image load yashodaadarsh/my-k8s-cicd-app:${BUILD_NUMBER}
+                minikube image load yashodaadarsh/my-k8s-node-app:${BUILD_NUMBER}
 
                 # Update deployment with new image
-                sed -i "s|image:.*|image: yashodaadarsh/my-k8s-cicd-app:${BUILD_NUMBER}|g" k8s/deployment.yaml
+                sed -i "s|image:.*|image: yashodaadarsh/my-k8s-node-app:${BUILD_NUMBER}|g" k8s/deployment.yaml
 
                 # Apply manifests
                 kubectl apply -f k8s/deployment.yaml
                 kubectl apply -f k8s/service.yaml
+                '''
+            }
+        }
+
+        stage('Verify deployment'){
+            steps{
+                sh '''
+                    minikube service my-k8s-app-service
                 '''
             }
         }
